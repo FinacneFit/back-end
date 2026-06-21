@@ -1,11 +1,34 @@
 import re
 
+from django.db.models import Count
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Stock
 from .serializers import StockSerializer
 from .utils import fetch_stock_info
+
+
+class StockStatsView(APIView):
+    """인증 없이 접근 가능한 종목 통계 — 로드 확인용"""
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        total = Stock.objects.count()
+        by_market = {
+            row['market']: row['n']
+            for row in Stock.objects.values('market').annotate(n=Count('id'))
+        }
+        by_category = {
+            row['category']: row['n']
+            for row in Stock.objects.values('category').annotate(n=Count('id')).order_by('-n')
+        }
+        return Response({
+            'total':       total,
+            'by_market':   by_market,
+            'by_category': by_category,
+        })
 
 
 class RecommendedStocksView(APIView):
