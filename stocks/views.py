@@ -34,14 +34,16 @@ class StockStatsView(APIView):
 class RecommendedStocksView(APIView):
     def get(self, request):
         investment_type = request.user.investment_type
-        all_stocks = list(Stock.objects.all())
+
+        # 전체 종목을 Python으로 필터 (SQLite JSON 제약)
+        all_stocks = list(Stock.objects.order_by('-market_cap'))
 
         if investment_type:
             recommended = [s for s in all_stocks if investment_type in s.suitable_types]
         else:
             recommended = all_stocks
 
-        serializer = StockSerializer(recommended[:3], many=True)
+        serializer = StockSerializer(recommended[:5], many=True)
         return Response(serializer.data)
 
 

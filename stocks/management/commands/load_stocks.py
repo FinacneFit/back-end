@@ -102,13 +102,15 @@ class Command(BaseCommand):
                 s.category       = category
                 s.price          = close
                 s.change         = round(change, 2)
+                s.market_cap     = marcap
                 s.suitable_types = suitable
                 to_update_objs.append(s)
             else:
                 to_create.append(Stock(
                     code=code, name=name, market=market,
                     category=category, price=close,
-                    change=round(change, 2), suitable_types=suitable,
+                    change=round(change, 2), market_cap=marcap,
+                    suitable_types=suitable,
                 ))
 
         # 배치 처리
@@ -117,7 +119,7 @@ class Command(BaseCommand):
         if to_update_objs:
             Stock.objects.bulk_update(
                 to_update_objs,
-                ['name', 'market', 'category', 'price', 'change', 'suitable_types'],
+                ['name', 'market', 'category', 'price', 'change', 'market_cap', 'suitable_types'],
             )
 
         self.stdout.write(self.style.SUCCESS(
