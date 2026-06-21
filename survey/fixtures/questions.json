@@ -1,0 +1,92 @@
+[
+  {"model": "survey.question", "pk":  1, "fields": {"question": "최근 투자 경험은 어느 정도인가요?", "order": 1}},
+  {"model": "survey.question", "pk":  2, "fields": {"question": "투자해본 상품과 가장 가까운 것은 무엇인가요?", "order": 2}},
+  {"model": "survey.question", "pk":  3, "fields": {"question": "금융상품에 대한 본인의 이해도는 어느 정도라고 생각하시나요?", "order": 3}},
+  {"model": "survey.question", "pk":  4, "fields": {"question": "투자하려는 자금의 투자 가능 기간은 어느 정도인가요?", "order": 4}},
+  {"model": "survey.question", "pk":  5, "fields": {"question": "투자의 주된 목적은 무엇인가요?", "order": 5}},
+  {"model": "survey.question", "pk":  6, "fields": {"question": "전체 금융자산 중 이번에 투자하려는 금액의 비중은 어느 정도인가요?", "order": 6}},
+  {"model": "survey.question", "pk":  7, "fields": {"question": "현재 수입 상황과 가장 가까운 것은 무엇인가요?", "order": 7}},
+  {"model": "survey.question", "pk":  8, "fields": {"question": "비상금이나 생활비를 제외하고 투자할 여유자금이 충분한가요?", "order": 8}},
+  {"model": "survey.question", "pk":  9, "fields": {"question": "투자 원금에 손실이 발생한다면 어느 정도까지 감수할 수 있나요?", "order": 9}},
+  {"model": "survey.question", "pk": 10, "fields": {"question": "보유한 주식이나 펀드가 단기간에 10% 하락한다면 어떻게 하시겠나요?", "order": 10}},
+  {"model": "survey.question", "pk": 11, "fields": {"question": "투자 중 가격 변동성을 어느 정도까지 견딜 수 있나요?", "order": 11}},
+  {"model": "survey.question", "pk": 12, "fields": {"question": "기대하는 연평균 수익률은 어느 정도인가요?", "order": 12}},
+  {"model": "survey.question", "pk": 13, "fields": {"question": "투자 결정을 할 때 가장 가까운 방식은 무엇인가요?", "order": 13}},
+  {"model": "survey.question", "pk": 14, "fields": {"question": "포트폴리오 구성 방식으로 가장 선호하는 것은 무엇인가요?", "order": 14}},
+  {"model": "survey.question", "pk": 15, "fields": {"question": "투자 실패 가능성에 대해 어떻게 생각하시나요?", "order": 15}},
+
+  {"model": "survey.choice", "pk":  1, "fields": {"question":  1, "text": "투자 경험이 거의 없다", "score": 1, "order": 1}},
+  {"model": "survey.choice", "pk":  2, "fields": {"question":  1, "text": "예·적금 외에 소액 투자 경험이 있다", "score": 3, "order": 2}},
+  {"model": "survey.choice", "pk":  3, "fields": {"question":  1, "text": "주식, ETF, 펀드 등에 꾸준히 투자해본 경험이 있다", "score": 6, "order": 3}},
+  {"model": "survey.choice", "pk":  4, "fields": {"question":  1, "text": "여러 금융상품을 직접 비교하고 투자해본 경험이 많다", "score": 8, "order": 4}},
+
+  {"model": "survey.choice", "pk":  5, "fields": {"question":  2, "text": "예금, 적금, CMA, MMF 등 원금 안정형 상품", "score": 1, "order": 1}},
+  {"model": "survey.choice", "pk":  6, "fields": {"question":  2, "text": "채권형 펀드, 우량 채권, 배당주 등 비교적 안정적인 상품", "score": 3, "order": 2}},
+  {"model": "survey.choice", "pk":  7, "fields": {"question":  2, "text": "국내외 주식, ETF, 주식형 펀드 등 변동성 있는 상품", "score": 6, "order": 3}},
+  {"model": "survey.choice", "pk":  8, "fields": {"question":  2, "text": "레버리지 ETF, 파생상품, 신용거래 등 고위험 상품", "score": 8, "order": 4}},
+
+  {"model": "survey.choice", "pk":  9, "fields": {"question":  3, "text": "투자 용어가 대부분 낯설고 스스로 판단하기 어렵다", "score": 1, "order": 1}},
+  {"model": "survey.choice", "pk": 10, "fields": {"question":  3, "text": "주식, 채권, 펀드의 차이를 대략 알고 있다", "score": 3, "order": 2}},
+  {"model": "survey.choice", "pk": 11, "fields": {"question":  3, "text": "수익률, 변동성, 분산투자 개념을 이해하고 있다", "score": 6, "order": 3}},
+  {"model": "survey.choice", "pk": 12, "fields": {"question":  3, "text": "재무제표, 산업 분석, 리스크 요인까지 고려해 투자할 수 있다", "score": 8, "order": 4}},
+
+  {"model": "survey.choice", "pk": 13, "fields": {"question":  4, "text": "6개월 이내에 사용할 가능성이 높다", "score": 1, "order": 1}},
+  {"model": "survey.choice", "pk": 14, "fields": {"question":  4, "text": "6개월 이상 1년 이내에는 사용할 수 있다", "score": 3, "order": 2}},
+  {"model": "survey.choice", "pk": 15, "fields": {"question":  4, "text": "1년 이상 3년 이내로 투자할 수 있다", "score": 6, "order": 3}},
+  {"model": "survey.choice", "pk": 16, "fields": {"question":  4, "text": "3년 이상 장기적으로 투자할 수 있다", "score": 8, "order": 4}},
+
+  {"model": "survey.choice", "pk": 17, "fields": {"question":  5, "text": "원금 보전이 가장 중요하다", "score": 1, "order": 1}},
+  {"model": "survey.choice", "pk": 18, "fields": {"question":  5, "text": "예·적금보다 조금 높은 안정적 수익을 원한다", "score": 3, "order": 2}},
+  {"model": "survey.choice", "pk": 19, "fields": {"question":  5, "text": "일정 수준의 손실을 감수하더라도 자산을 늘리고 싶다", "score": 6, "order": 3}},
+  {"model": "survey.choice", "pk": 20, "fields": {"question":  5, "text": "높은 수익을 위해 적극적으로 위험을 감수할 수 있다", "score": 8, "order": 4}},
+
+  {"model": "survey.choice", "pk": 21, "fields": {"question":  6, "text": "10% 미만", "score": 1, "order": 1}},
+  {"model": "survey.choice", "pk": 22, "fields": {"question":  6, "text": "10% 이상 30% 미만", "score": 3, "order": 2}},
+  {"model": "survey.choice", "pk": 23, "fields": {"question":  6, "text": "30% 이상 50% 미만", "score": 6, "order": 3}},
+  {"model": "survey.choice", "pk": 24, "fields": {"question":  6, "text": "50% 이상", "score": 8, "order": 4}},
+
+  {"model": "survey.choice", "pk": 25, "fields": {"question":  7, "text": "정기적인 수입이 없거나 매우 불안정하다", "score": 1, "order": 1}},
+  {"model": "survey.choice", "pk": 26, "fields": {"question":  7, "text": "수입은 있지만 지출 부담이 커 투자 여력이 크지 않다", "score": 3, "order": 2}},
+  {"model": "survey.choice", "pk": 27, "fields": {"question":  7, "text": "일정한 수입이 있고 일부 금액을 꾸준히 투자할 수 있다", "score": 6, "order": 3}},
+  {"model": "survey.choice", "pk": 28, "fields": {"question":  7, "text": "수입이 안정적이며 투자 가능한 여유자금이 충분하다", "score": 8, "order": 4}},
+
+  {"model": "survey.choice", "pk": 29, "fields": {"question":  8, "text": "비상금이 부족해 투자금 손실이 생활에 영향을 줄 수 있다", "score": 1, "order": 1}},
+  {"model": "survey.choice", "pk": 30, "fields": {"question":  8, "text": "최소한의 비상금은 있지만 큰 손실은 부담스럽다", "score": 3, "order": 2}},
+  {"model": "survey.choice", "pk": 31, "fields": {"question":  8, "text": "생활비와 비상금을 제외한 여유자금으로 투자한다", "score": 6, "order": 3}},
+  {"model": "survey.choice", "pk": 32, "fields": {"question":  8, "text": "손실이 발생해도 생활에 거의 영향이 없는 자금으로 투자한다", "score": 8, "order": 4}},
+
+  {"model": "survey.choice", "pk": 33, "fields": {"question":  9, "text": "원금 손실은 절대 원하지 않는다", "score": 1, "order": 1}},
+  {"model": "survey.choice", "pk": 34, "fields": {"question":  9, "text": "10% 미만의 손실까지는 감수할 수 있다", "score": 3, "order": 2}},
+  {"model": "survey.choice", "pk": 35, "fields": {"question":  9, "text": "20% 내외의 손실도 장기적으로 감수할 수 있다", "score": 6, "order": 3}},
+  {"model": "survey.choice", "pk": 36, "fields": {"question":  9, "text": "높은 수익 가능성이 있다면 30% 이상의 손실도 감수할 수 있다", "score": 8, "order": 4}},
+
+  {"model": "survey.choice", "pk": 37, "fields": {"question": 10, "text": "즉시 매도하고 안전자산으로 옮긴다", "score": 1, "order": 1}},
+  {"model": "survey.choice", "pk": 38, "fields": {"question": 10, "text": "불안하지만 상황을 지켜본다", "score": 3, "order": 2}},
+  {"model": "survey.choice", "pk": 39, "fields": {"question": 10, "text": "기업이나 시장에 문제가 없다면 계속 보유한다", "score": 6, "order": 3}},
+  {"model": "survey.choice", "pk": 40, "fields": {"question": 10, "text": "오히려 추가 매수 기회로 판단할 수 있다", "score": 8, "order": 4}},
+
+  {"model": "survey.choice", "pk": 41, "fields": {"question": 11, "text": "하루라도 손실이 보이면 불안하다", "score": 1, "order": 1}},
+  {"model": "survey.choice", "pk": 42, "fields": {"question": 11, "text": "작은 변동은 괜찮지만 큰 하락은 부담스럽다", "score": 3, "order": 2}},
+  {"model": "survey.choice", "pk": 43, "fields": {"question": 11, "text": "단기 변동보다 장기 수익률을 더 중요하게 본다", "score": 6, "order": 3}},
+  {"model": "survey.choice", "pk": 44, "fields": {"question": 11, "text": "큰 변동성도 수익 기회라고 생각한다", "score": 8, "order": 4}},
+
+  {"model": "survey.choice", "pk": 45, "fields": {"question": 12, "text": "원금 보전 수준이면 충분하다", "score": 1, "order": 1}},
+  {"model": "survey.choice", "pk": 46, "fields": {"question": 12, "text": "예·적금보다 높은 3~7% 정도를 기대한다", "score": 3, "order": 2}},
+  {"model": "survey.choice", "pk": 47, "fields": {"question": 12, "text": "시장 평균 수준인 7~15% 정도를 기대한다", "score": 6, "order": 3}},
+  {"model": "survey.choice", "pk": 48, "fields": {"question": 12, "text": "15% 이상의 높은 수익률을 추구한다", "score": 8, "order": 4}},
+
+  {"model": "survey.choice", "pk": 49, "fields": {"question": 13, "text": "주변 추천이나 은행·증권사 안내에 주로 의존한다", "score": 1, "order": 1}},
+  {"model": "survey.choice", "pk": 50, "fields": {"question": 13, "text": "기본적인 정보만 확인하고 신중하게 결정한다", "score": 3, "order": 2}},
+  {"model": "survey.choice", "pk": 51, "fields": {"question": 13, "text": "뉴스, 차트, 기업 정보를 비교한 뒤 직접 결정한다", "score": 6, "order": 3}},
+  {"model": "survey.choice", "pk": 52, "fields": {"question": 13, "text": "재무제표, 산업 전망, 리스크까지 분석해 적극적으로 결정한다", "score": 8, "order": 4}},
+
+  {"model": "survey.choice", "pk": 53, "fields": {"question": 14, "text": "예금, 적금 등 안전자산 중심으로 구성하고 싶다", "score": 1, "order": 1}},
+  {"model": "survey.choice", "pk": 54, "fields": {"question": 14, "text": "안전자산을 중심으로 일부만 주식이나 ETF에 투자하고 싶다", "score": 3, "order": 2}},
+  {"model": "survey.choice", "pk": 55, "fields": {"question": 14, "text": "주식, ETF, 펀드 등을 균형 있게 섞어 투자하고 싶다", "score": 6, "order": 3}},
+  {"model": "survey.choice", "pk": 56, "fields": {"question": 14, "text": "대부분을 주식이나 성장성이 높은 자산에 투자하고 싶다", "score": 8, "order": 4}},
+
+  {"model": "survey.choice", "pk": 57, "fields": {"question": 15, "text": "손실 가능성이 있다면 투자를 피하고 싶다", "score": 1, "order": 1}},
+  {"model": "survey.choice", "pk": 58, "fields": {"question": 15, "text": "작은 손실 가능성은 받아들일 수 있지만 안정성이 중요하다", "score": 3, "order": 2}},
+  {"model": "survey.choice", "pk": 59, "fields": {"question": 15, "text": "수익을 위해 어느 정도 손실 가능성은 당연하다고 생각한다", "score": 6, "order": 3}},
+  {"model": "survey.choice", "pk": 60, "fields": {"question": 15, "text": "높은 수익을 위해 큰 손실 가능성도 감수할 수 있다", "score": 8, "order": 4}}
+]

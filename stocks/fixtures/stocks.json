@@ -1,0 +1,15 @@
+[
+  {"model": "stocks.stock", "pk": 1,  "fields": {"name": "삼성전자",       "code": "005930", "category": "반도체", "price": 313000, "change":  4.16, "suitable_types": ["안정형", "안정추구형", "위험중립형"]}},
+  {"model": "stocks.stock", "pk": 2,  "fields": {"name": "SK하이닉스",     "code": "000660", "category": "반도체", "price": 187500, "change":  2.83, "suitable_types": ["위험중립형", "적극투자형"]}},
+  {"model": "stocks.stock", "pk": 3,  "fields": {"name": "KODEX 200",     "code": "069500", "category": "ETF",   "price": 38650,  "change": -0.41, "suitable_types": ["안정형", "안정추구형"]}},
+  {"model": "stocks.stock", "pk": 4,  "fields": {"name": "한화오션",        "code": "042660", "category": "조선",  "price": 38200,  "change":  1.85, "suitable_types": ["적극투자형", "공격투자형"]}},
+  {"model": "stocks.stock", "pk": 5,  "fields": {"name": "현대중공업",      "code": "329180", "category": "조선",  "price": 124500, "change":  0.97, "suitable_types": ["공격투자형"]}},
+  {"model": "stocks.stock", "pk": 6,  "fields": {"name": "POSCO홀딩스",    "code": "005490", "category": "철강",  "price": 268000, "change": -1.12, "suitable_types": ["안정추구형", "위험중립형"]}},
+  {"model": "stocks.stock", "pk": 7,  "fields": {"name": "LG에너지솔루션", "code": "373220", "category": "배터리","price": 278000, "change":  2.40, "suitable_types": ["위험중립형", "적극투자형"]}},
+  {"model": "stocks.stock", "pk": 8,  "fields": {"name": "카카오",          "code": "035720", "category": "IT",   "price": 43100,  "change": -0.69, "suitable_types": ["위험중립형", "공격투자형"]}},
+  {"model": "stocks.stock", "pk": 9,  "fields": {"name": "네이버",          "code": "035420", "category": "IT",   "price": 162000, "change":  1.23, "suitable_types": ["안정추구형", "위험중립형"]}},
+  {"model": "stocks.stock", "pk": 10, "fields": {"name": "현대차",          "code": "005380", "category": "자동차","price": 198000, "change":  0.51, "suitable_types": ["안정추구형", "위험중립형"]}},
+  {"model": "stocks.stock", "pk": 11, "fields": {"name": "기아",            "code": "000270", "category": "자동차","price": 97300,  "change":  1.04, "suitable_types": ["위험중립형", "적극투자형"]}},
+  {"model": "stocks.stock", "pk": 12, "fields": {"name": "KB금융",          "code": "105560", "category": "금융",  "price": 81000,  "change":  0.37, "suitable_types": ["안정형", "안정추구형"]}},
+  {"model": "stocks.stock", "pk": 13, "fields": {"name": "셀트리온",        "code": "068270", "category": "바이오","price": 145000, "change":  3.21, "suitable_types": ["적극투자형", "공격투자형"]}}
+]
