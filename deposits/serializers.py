@@ -2,25 +2,6 @@ from rest_framework import serializers
 from .models import DepositProduct, DepositOption, SavedDeposit
 
 
-class DepositOptionSerializer(serializers.ModelSerializer):
-    period = serializers.SerializerMethodField()
-    baseRate = serializers.FloatField(source='intr_rate')
-    maxRate = serializers.FloatField(source='intr_rate2')
-    interestType = serializers.CharField(source='intr_rate_type_nm')
-
-    class Meta:
-        model = DepositOption
-        fields = [
-            'period',
-            'baseRate',
-            'maxRate',
-            'interestType',
-        ]
-
-    def get_period(self, obj):
-        return f'{obj.save_trm}개월'
-
-
 class DepositProductSerializer(serializers.ModelSerializer):
     bankName = serializers.CharField(source='kor_co_nm')
     productName = serializers.CharField(source='fin_prdt_nm')
@@ -33,11 +14,11 @@ class DepositProductSerializer(serializers.ModelSerializer):
     joinMethods = serializers.SerializerMethodField()
     disclosureDate = serializers.SerializerMethodField()
 
-    afterMaturityRate = serializers.SerializerMethodField()
-    restriction = serializers.SerializerMethodField()
-    target = serializers.SerializerMethodField()
-    note = serializers.SerializerMethodField()
-    maxLimit = serializers.SerializerMethodField()
+    afterMaturityRate = serializers.CharField(source='mtrt_int', allow_blank=True)
+    restriction = serializers.CharField(source='join_deny', allow_blank=True)
+    target = serializers.CharField(source='join_member', allow_blank=True)
+    note = serializers.CharField(source='etc_note', allow_blank=True)
+    maxLimit = serializers.CharField(source='max_limit', allow_blank=True)
 
     options = serializers.SerializerMethodField()
 
@@ -62,17 +43,17 @@ class DepositProductSerializer(serializers.ModelSerializer):
             'options',
         ]
 
-    def _options(self, obj):
-        return list(obj.options.all().order_by('save_trm', 'intr_rate_type'))
+    def _opts(self, obj):
+        return list(obj.options.order_by('save_trm', 'intr_rate_type'))
 
     def _best_option(self, obj):
-        options = self._options(obj)
+        opts = self._opts(obj)
 
-        if not options:
+        if not opts:
             return None
 
         return max(
-            options,
+            opts,
             key=lambda option: (
                 option.intr_rate2 or 0,
                 option.intr_rate or 0,
@@ -94,8 +75,7 @@ class DepositProductSerializer(serializers.ModelSerializer):
         if not option:
             return 0.0
 
-        rate = option.intr_rate2 or option.intr_rate or 0
-        return round(rate, 2)
+        return round(option.intr_rate2 or option.intr_rate or 0, 2)
 
     def get_term(self, obj):
         option = self._best_option(obj)
@@ -147,32 +127,26 @@ class DepositProductSerializer(serializers.ModelSerializer):
 
         return value
 
-    def get_afterMaturityRate(self, obj):
-        return obj.mtrt_int or '-'
-
-    def get_restriction(self, obj):
-        return obj.join_deny or '-'
-
-    def get_target(self, obj):
-        return obj.join_member or '-'
-
-    def get_note(self, obj):
-        return obj.etc_note or '-'
-
-    def get_maxLimit(self, obj):
-        if not obj.max_limit:
-            return '-'
-
-        value = str(obj.max_limit).strip()
-
-        if value.isdigit():
-            return f'{int(value):,}원'
-
-        return value
-
     def get_options(self, obj):
-        serializer = DepositOptionSerializer(self._options(obj), many=True)
-        return serializer.data
+        seen = set()
+        result = []
+
+        for option in self._opts(obj):
+            key = (option.save_trm, option.intr_rate_type)
+
+            if key in seen:
+                continue
+
+            seen.add(key)
+
+            result.append({
+                'period': f'{option.save_trm}개월',
+                'baseRate': option.intr_rate,
+                'maxRate': option.intr_rate2 or option.intr_rate or 0,
+                'interestType': option.intr_rate_type_nm,
+            })
+
+        return result
 
 
 class SavedDepositSerializer(serializers.ModelSerializer):
@@ -192,6 +166,6 @@ class SavedDepositSerializer(serializers.ModelSerializer):
 
 class SavedDepositCreateSerializer(serializers.Serializer):
     product_id = serializers.IntegerField()
-    amount = serializers.IntegerField(required=False, allow_null=True)
-    final_rate = serializers.FloatField(required=False, allow_null=True)
-    memo = serializers.CharField(required=False, allow_blank=True)
+    amount = serializers.IntegerField(required=False, default=0)
+    final_rate = serializers.FloatField(required=False, default=0)
+    memo = serializers.CharField(required=False, allow_blank=True, default='')

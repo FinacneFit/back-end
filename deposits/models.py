@@ -28,7 +28,7 @@ class DepositProduct(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ('fin_co_no', 'fin_prdt_cd')
+        unique_together = ('fin_co_no', 'fin_prdt_cd', 'product_type')
         ordering = ['kor_co_nm', 'fin_prdt_nm']
 
     def __str__(self):
@@ -66,14 +66,15 @@ class SavedDeposit(models.Model):
         on_delete=models.CASCADE,
         related_name='saved_deposits',
     )
+
     product = models.ForeignKey(
         DepositProduct,
         on_delete=models.CASCADE,
         related_name='saved_users',
     )
 
-    amount = models.PositiveIntegerField(null=True, blank=True)
-    final_rate = models.FloatField(null=True, blank=True)
+    amount = models.PositiveIntegerField(default=0)
+    final_rate = models.FloatField(default=0)
     memo = models.TextField(blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
