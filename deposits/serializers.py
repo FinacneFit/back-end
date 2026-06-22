@@ -1,78 +1,197 @@
 from rest_framework import serializers
-from .models import DepositProduct, DepositOption
+from .models import DepositProduct, DepositOption, SavedDeposit
+
+
+class DepositOptionSerializer(serializers.ModelSerializer):
+    period = serializers.SerializerMethodField()
+    baseRate = serializers.FloatField(source='intr_rate')
+    maxRate = serializers.FloatField(source='intr_rate2')
+    interestType = serializers.CharField(source='intr_rate_type_nm')
+
+    class Meta:
+        model = DepositOption
+        fields = [
+            'period',
+            'baseRate',
+            'maxRate',
+            'interestType',
+        ]
+
+    def get_period(self, obj):
+        return f'{obj.save_trm}개월'
 
 
 class DepositProductSerializer(serializers.ModelSerializer):
-    bankName         = serializers.CharField(source='kor_co_nm')
-    productName      = serializers.CharField(source='fin_prdt_nm')
-    productType      = serializers.CharField(source='product_type')
-    interestType     = serializers.SerializerMethodField()
-    baseRate         = serializers.SerializerMethodField()
-    maxRate          = serializers.SerializerMethodField()
-    term             = serializers.SerializerMethodField()
-    joinMethods      = serializers.SerializerMethodField()
-    disclosureDate   = serializers.SerializerMethodField()
-    afterMaturityRate = serializers.CharField(source='mtrt_int')
-    restriction      = serializers.CharField(source='join_deny')
-    target           = serializers.CharField(source='join_member')
-    note             = serializers.CharField(source='etc_note')
-    maxLimit         = serializers.CharField(source='max_limit')
-    options          = serializers.SerializerMethodField()
+    bankName = serializers.CharField(source='kor_co_nm')
+    productName = serializers.CharField(source='fin_prdt_nm')
+    productType = serializers.CharField(source='product_type')
+
+    interestType = serializers.SerializerMethodField()
+    baseRate = serializers.SerializerMethodField()
+    maxRate = serializers.SerializerMethodField()
+    term = serializers.SerializerMethodField()
+    joinMethods = serializers.SerializerMethodField()
+    disclosureDate = serializers.SerializerMethodField()
+
+    afterMaturityRate = serializers.SerializerMethodField()
+    restriction = serializers.SerializerMethodField()
+    target = serializers.SerializerMethodField()
+    note = serializers.SerializerMethodField()
+    maxLimit = serializers.SerializerMethodField()
+
+    options = serializers.SerializerMethodField()
 
     class Meta:
         model = DepositProduct
         fields = [
-            'id', 'bankName', 'productName', 'productType',
-            'interestType', 'baseRate', 'maxRate', 'term',
-            'joinMethods', 'disclosureDate', 'afterMaturityRate',
-            'restriction', 'target', 'note', 'maxLimit', 'options',
+            'id',
+            'bankName',
+            'productName',
+            'productType',
+            'interestType',
+            'baseRate',
+            'maxRate',
+            'term',
+            'joinMethods',
+            'disclosureDate',
+            'afterMaturityRate',
+            'restriction',
+            'target',
+            'note',
+            'maxLimit',
+            'options',
         ]
 
-    def _opts(self, obj):
-        return list(obj.options.order_by('save_trm', 'intr_rate_type'))
+    def _options(self, obj):
+        return list(obj.options.all().order_by('save_trm', 'intr_rate_type'))
+
+    def _best_option(self, obj):
+        options = self._options(obj)
+
+        if not options:
+            return None
+
+        return max(
+            options,
+            key=lambda option: (
+                option.intr_rate2 or 0,
+                option.intr_rate or 0,
+                -option.save_trm,
+            ),
+        )
 
     def get_interestType(self, obj):
-        opt = obj.options.order_by('save_trm').first()
-        return opt.intr_rate_type_nm if opt else '단리'
+        option = self._best_option(obj)
+        return option.intr_rate_type_nm if option else '단리'
 
     def get_baseRate(self, obj):
-        rates = [o.intr_rate for o in self._opts(obj) if o.intr_rate]
-        return round(max(rates), 2) if rates else 0.0
+        option = self._best_option(obj)
+        return round(option.intr_rate, 2) if option else 0.0
 
     def get_maxRate(self, obj):
-        rates = [o.intr_rate2 for o in self._opts(obj) if o.intr_rate2]
-        return round(max(rates), 2) if rates else 0.0
+        option = self._best_option(obj)
+
+        if not option:
+            return 0.0
+
+        rate = option.intr_rate2 or option.intr_rate or 0
+        return round(rate, 2)
 
     def get_term(self, obj):
-        opts = self._opts(obj)
-        if not opts:
-            return '-'
-        # 최고우대금리가 가장 높은 기간 표시
-        best = max(opts, key=lambda o: (o.intr_rate2 or 0))
-        return f'{best.save_trm}개월'
+        option = self._best_option(obj)
+        return f'{option.save_trm}개월' if option else '-'
 
     def get_joinMethods(self, obj):
         if not obj.join_way:
             return []
-        raw = obj.join_way.replace('·', ',').replace('/', ',')
-        return [m.strip() for m in raw.split(',') if m.strip()]
+
+        raw = (
+            obj.join_way
+            .replace('·', ',')
+            .replace('/', ',')
+            .replace('+', ',')
+        )
+
+        result = []
+
+        for item in raw.split(','):
+            item = item.strip()
+
+            if not item:
+                continue
+
+            if '영업점' in item:
+                normalized = '영업점'
+            elif '인터넷' in item:
+                normalized = '인터넷뱅킹'
+            elif '스마트' in item or '모바일' in item or '앱' in item:
+                normalized = '스마트뱅킹'
+            elif '전화' in item:
+                normalized = '전화'
+            else:
+                normalized = item
+
+            if normalized not in result:
+                result.append(normalized)
+
+        return result
 
     def get_disclosureDate(self, obj):
-        m = obj.dcls_month
-        if not m or len(m) < 6:
-            return m or ''
-        return f'{m[:4]}-{m[4:6]}'
+        value = obj.dcls_month
+
+        if not value:
+            return ''
+
+        if len(value) >= 6:
+            return f'{value[:4]}-{value[4:6]}'
+
+        return value
+
+    def get_afterMaturityRate(self, obj):
+        return obj.mtrt_int or '-'
+
+    def get_restriction(self, obj):
+        return obj.join_deny or '-'
+
+    def get_target(self, obj):
+        return obj.join_member or '-'
+
+    def get_note(self, obj):
+        return obj.etc_note or '-'
+
+    def get_maxLimit(self, obj):
+        if not obj.max_limit:
+            return '-'
+
+        value = str(obj.max_limit).strip()
+
+        if value.isdigit():
+            return f'{int(value):,}원'
+
+        return value
 
     def get_options(self, obj):
-        seen = set()
-        result = []
-        for o in self._opts(obj):
-            key = (o.save_trm, o.intr_rate_type)
-            if key not in seen:
-                seen.add(key)
-                result.append({
-                    'period':   f'{o.save_trm}개월',
-                    'baseRate': o.intr_rate,
-                    'maxRate':  o.intr_rate2,
-                })
-        return result
+        serializer = DepositOptionSerializer(self._options(obj), many=True)
+        return serializer.data
+
+
+class SavedDepositSerializer(serializers.ModelSerializer):
+    product = DepositProductSerializer(read_only=True)
+
+    class Meta:
+        model = SavedDeposit
+        fields = [
+            'id',
+            'product',
+            'amount',
+            'final_rate',
+            'memo',
+            'created_at',
+        ]
+
+
+class SavedDepositCreateSerializer(serializers.Serializer):
+    product_id = serializers.IntegerField()
+    amount = serializers.IntegerField(required=False, allow_null=True)
+    final_rate = serializers.FloatField(required=False, allow_null=True)
+    memo = serializers.CharField(required=False, allow_blank=True)
