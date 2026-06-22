@@ -17,6 +17,21 @@ from apscheduler.triggers.interval import IntervalTrigger
 logger = logging.getLogger(__name__)
 _scheduler = None
 
+
+# ── 잡 3: 예금·적금 상품 일일 갱신 (FSS API) ────────────────────────
+
+def _update_deposits():
+    """매일 새벽 2시 FSS API 데이터 갱신"""
+    import os
+    if not os.environ.get('FSS_API_KEY'):
+        return
+    try:
+        from django.core.management import call_command
+        call_command('load_deposits')
+        logger.info('[FSS] 예금·적금 상품 갱신 완료')
+    except Exception as e:
+        logger.error(f'[FSS] 예금·적금 갱신 실패: {e}')
+
 INVESTMENT_TYPES = ['안정형', '안정추구형', '위험중립형', '적극투자형', '공격투자형']
 
 
@@ -120,9 +135,15 @@ def start():
         id='daily_close_update',
         replace_existing=True,
     )
+    _scheduler.add_job(
+        _update_deposits,
+        CronTrigger(hour=2, minute=0, timezone=tz),
+        id='daily_deposit_update',
+        replace_existing=True,
+    )
 
     _scheduler.start()
-    logger.info('[스케줄러] 시작 — KIS 1분 갱신(포트폴리오+추천) + FDR 16:00 종가 갱신')
+    logger.info('[스케줄러] 시작 — KIS 1분 갱신(포트폴리오+추천) + FDR 16:00 종가 갱신 + FSS 02:00 예금 갱신')
 
 
 def shutdown():

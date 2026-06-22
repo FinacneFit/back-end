@@ -10,5 +10,6 @@ urlpatterns = [
         path('portfolio/', include('portfolio.urls')),
         path('community/', include('community.urls')),
         path('chat/', include('chat.urls')),
+        path('deposits/', include('deposits.urls')),
     ])),
 ]

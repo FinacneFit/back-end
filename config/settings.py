@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'portfolio',
     'community',
     'chat',
+    'deposits',
 ]
 
 MIDDLEWARE = [
