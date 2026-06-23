@@ -195,25 +195,38 @@ def calc_health_score(sector_type, debt_ratio, current_ratio, op_margin, roe):
     return _health_general(debt_ratio, current_ratio, op_margin)
 
 
-# ── 2단계: 성장성/공격성 점수 (0~11) ────────────────────────────────
+# ── 2단계: 성장성/공격성 점수 (0~19) ────────────────────────────────
+# 실측 결과: PER·ROE 모두 93%가 None → PBR이 사실상 유일한 분류 기준
+# PBR<1 구간에 전체 60%가 몰려 있어 세분화하여 분포를 고르게 함
 
 def calc_growth_score(per, pbr, roe):
     score = 0
+    # PER (0~7): 93%가 None이므로 영향 제한적
     if per is not None:
-        if   per < 0:    score += 5   # 성장기 적자 (고성장 기대)
-        elif per < 10:   score += 1   # 저PER 가치주
-        elif per < 15:   score += 2
-        elif per < 25:   score += 3
-        elif per < 50:   score += 4
-        else:            score += 5   # 고PER 성장주
+        if   per < 0:    score += 7   # 성장기 적자
+        elif per < 7:    score += 1
+        elif per < 10:   score += 2
+        elif per < 15:   score += 3
+        elif per < 25:   score += 4
+        elif per < 50:   score += 5
+        elif per < 100:  score += 6
+        else:            score += 7   # 고PER 성장주
+    # PBR (0~8): 한국 주식은 PBR<1이 60% → 4개 구간으로 세분화
     if pbr is not None:
-        if   pbr < 1:   score += 1
-        elif pbr < 2:   score += 2
-        elif pbr < 4:   score += 3
-        elif pbr < 7:   score += 4
-        else:           score += 5
-    if roe is not None and roe > 15:
-        score += 1
+        if   pbr < 0.3:  score += 1
+        elif pbr < 0.5:  score += 2
+        elif pbr < 0.8:  score += 3
+        elif pbr < 1.0:  score += 4
+        elif pbr < 2.0:  score += 5
+        elif pbr < 4.0:  score += 6
+        elif pbr < 7.0:  score += 7
+        else:            score += 8
+    # ROE (0~4): 93%가 None이므로 영향 제한적
+    if roe is not None:
+        if   roe > 15:  score += 4
+        elif roe > 10:  score += 3
+        elif roe > 5:   score += 2
+        elif roe > 0:   score += 1
     return score
 
 
@@ -221,10 +234,12 @@ def assign_suitable_types(health_score, per, pbr, roe):
     if health_score < 40:
         return []   # 투자주의: 건전성 미달, 추천 제외
     growth = calc_growth_score(per, pbr, roe)
-    if   growth <= 2:  return ['안정형', '안정추구형']
-    elif growth <= 4:  return ['안정추구형', '위험중립형']
-    elif growth <= 6:  return ['위험중립형', '적극투자형']
-    elif growth <= 8:  return ['적극투자형', '공격투자형']
+    # PBR 기준 예상 분포: ≤2(679) / 3-4(547) / 5(379) / 6-7(289) / 8-9(141) / 10+(~100)
+    if   growth <= 2:  return ['안정형']
+    elif growth <= 4:  return ['안정형', '안정추구형']
+    elif growth <= 5:  return ['안정추구형', '위험중립형']
+    elif growth <= 7:  return ['위험중립형', '적극투자형']
+    elif growth <= 9:  return ['적극투자형', '공격투자형']
     else:              return ['공격투자형']
 
 

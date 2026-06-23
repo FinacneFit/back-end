@@ -61,7 +61,12 @@ def _build_system_prompt(user, user_context=None):
     )
 
     # ── 성향 기반 추천 종목 (건전성 알고리즘 결과) ──
-    all_stocks = Stock.objects.select_related('financials').order_by('-market_cap')
+    all_stocks = (
+        Stock.objects
+        .select_related('financials')
+        .filter(financials__isnull=False)
+        .order_by('-market_cap')
+    )
     if investment_type:
         recommended = [s for s in all_stocks if investment_type in (s.suitable_types or [])][:5]
     else:
