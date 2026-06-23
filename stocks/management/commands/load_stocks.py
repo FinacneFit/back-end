@@ -1,28 +1,32 @@
 """
 python manage.py load_stocks          # 신규/갱신 (기존 유지)
 python manage.py load_stocks --flush  # 전체 삭제 후 재로드
+
+suitable_types 우선순위:
+  1. StockFinancials.risk_score 가 있으면 재무지표 기반 점수로 결정
+  2. 없으면 시가총액 + 시장 구분 fallback
 """
 import FinanceDataReader as fdr
 from django.core.management.base import BaseCommand
 
 from stocks.models import Stock
 
-# ── 시가총액 기준 투자성향 분류 ──────────────────────────────
-# Marcap 단위: 원(KRW)
+
+# ── Fallback: 시가총액 + 시장 구분 기준 ─────────────────────────────
 THRESHOLDS_KOSPI = [
-    (10_000_000_000_000, ['안정형', '안정추구형']),          # 10조+
-    ( 1_000_000_000_000, ['안정추구형', '위험중립형']),       # 1조+
-    (   300_000_000_000, ['위험중립형', '적극투자형']),       # 3000억+
+    (10_000_000_000_000, ['안정형', '안정추구형']),
+    ( 1_000_000_000_000, ['안정추구형', '위험중립형']),
+    (   300_000_000_000, ['위험중립형', '적극투자형']),
 ]
 THRESHOLDS_KOSDAQ = [
-    ( 1_000_000_000_000, ['위험중립형', '적극투자형']),       # 1조+
+    (1_000_000_000_000, ['위험중립형', '적극투자형']),
 ]
 DEFAULT_KOSPI  = ['적극투자형', '공격투자형']
 DEFAULT_KOSDAQ = ['공격투자형']
 DEFAULT_KONEX  = ['공격투자형']
 
 
-def _suitable_types(market, marcap):
+def _suitable_types_fallback(market, marcap):
     if market == 'KOSPI':
         for threshold, types in THRESHOLDS_KOSPI:
             if marcap >= threshold:
@@ -34,6 +38,37 @@ def _suitable_types(market, marcap):
                 return types
         return DEFAULT_KOSDAQ
     return DEFAULT_KONEX
+
+
+# ── 재무지표 기반: risk_score → suitable_types ───────────────────────
+def _suitable_types_from_score(score):
+    if   score <= 20:  return ['안정형', '안정추구형']
+    elif score <= 40:  return ['안정추구형', '위험중립형']
+    elif score <= 58:  return ['위험중립형', '적극투자형']
+    elif score <= 75:  return ['적극투자형', '공격투자형']
+    else:              return ['공격투자형']
+
+
+def _suitable_types(stock_obj, market, marcap):
+    """StockFinancials 있으면 2단계 알고리즘 적용, 없으면 시가총액 fallback."""
+    try:
+        fin = stock_obj.financials
+        from stocks.management.commands.update_financials import (
+            calc_health_score, assign_suitable_types, detect_sector_type
+        )
+        sector_type = detect_sector_type(
+            stock_obj.name, stock_obj.sector or '',
+            fin.debt_ratio, fin.op_margin
+        )
+        health = calc_health_score(
+            sector_type, fin.debt_ratio, fin.current_ratio, fin.op_margin, fin.roe
+        )
+        result = assign_suitable_types(health, fin.per, fin.pbr, fin.roe)
+        if result is not None:
+            return result
+    except Exception:
+        pass
+    return _suitable_types_fallback(market, marcap)
 
 
 def _category(market, marcap):
@@ -92,26 +127,26 @@ class Command(BaseCommand):
                 skipped += 1
                 continue
 
-            suitable = _suitable_types(market, marcap)
             category = _category(market, marcap)
 
             if code in existing:
                 s = existing[code]
-                s.name           = name
-                s.market         = market
-                s.category       = category
-                s.price          = close
-                s.change         = round(change, 2)
-                s.market_cap     = marcap
-                s.suitable_types = suitable
+                s.name       = name
+                s.market     = market
+                s.category   = category
+                s.price      = close
+                s.change     = round(change, 2)
+                s.market_cap = marcap
+                s.suitable_types = _suitable_types(s, market, marcap)
                 to_update_objs.append(s)
             else:
-                to_create.append(Stock(
+                new_stock = Stock(
                     code=code, name=name, market=market,
                     category=category, price=close,
                     change=round(change, 2), market_cap=marcap,
-                    suitable_types=suitable,
-                ))
+                    suitable_types=_suitable_types_fallback(market, marcap),
+                )
+                to_create.append(new_stock)
 
         # 배치 처리
         if to_create:

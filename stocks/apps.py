@@ -10,7 +10,8 @@ class StocksConfig(AppConfig):
         import sys
         # 마이그레이션·셸 등 관리 커맨드에서는 스케줄러 미실행
         mgmt_cmds = {'migrate', 'makemigrations', 'shell', 'createsuperuser',
-                     'collectstatic', 'test', 'check', 'load_stocks', 'update_prices'}
+                     'collectstatic', 'test', 'check', 'load_stocks', 'update_prices',
+                     'load_deposits', 'load_survey'}
         if any(cmd in sys.argv for cmd in mgmt_cmds):
             return
 

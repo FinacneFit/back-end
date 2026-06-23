@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'portfolio',
     'community',
     'chat',
+    'deposits',
 ]
 
 MIDDLEWARE = [
@@ -65,6 +66,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+        'OPTIONS': {
+            'timeout': 30,  # database is locked 대기 시간(초)
+        },
     }
 }
 

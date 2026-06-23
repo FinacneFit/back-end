@@ -35,8 +35,12 @@ class RecommendedStocksView(APIView):
     def get(self, request):
         investment_type = request.user.investment_type
 
-        # 전체 종목을 Python으로 필터 (SQLite JSON 제약)
-        all_stocks = list(Stock.objects.order_by('-market_cap'))
+        # financials JOIN — risk_score 있는 종목 우선, 없는 종목은 시가총액 순
+        all_stocks = list(
+            Stock.objects
+            .select_related('financials')
+            .order_by('financials__risk_score', '-market_cap')
+        )
 
         if investment_type:
             recommended = [s for s in all_stocks if investment_type in s.suitable_types]
