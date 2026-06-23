@@ -51,6 +51,16 @@ class PostDetailView(APIView):
         serializer = PostDetailSerializer(post, context={'request': request})
         return Response(serializer.data)
 
+    def patch(self, request, post_id):
+        post = self.get_object(post_id)
+        if post.author != request.user:
+            return Response({'detail': '수정 권한이 없습니다.'}, status=status.HTTP_403_FORBIDDEN)
+        serializer = PostCreateSerializer(post, data=request.data, partial=True)
+        if serializer.is_valid():
+            post = serializer.save()
+            return Response(PostDetailSerializer(post, context={'request': request}).data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     def delete(self, request, post_id):
         post = self.get_object(post_id)
         if post.author != request.user:
@@ -82,6 +92,17 @@ class CommentListCreateView(APIView):
 
 
 class CommentDetailView(APIView):
+    def patch(self, request, post_id, comment_id):
+        comment = get_object_or_404(Comment, pk=comment_id, post_id=post_id)
+        if comment.author != request.user:
+            return Response({'detail': '수정 권한이 없습니다.'}, status=status.HTTP_403_FORBIDDEN)
+        text = request.data.get('text', '').strip()
+        if not text:
+            return Response({'detail': '댓글 내용을 입력해주세요.'}, status=status.HTTP_400_BAD_REQUEST)
+        comment.text = text
+        comment.save(update_fields=['text'])
+        return Response(CommentSerializer(comment).data)
+
     def delete(self, request, post_id, comment_id):
         comment = get_object_or_404(Comment, pk=comment_id, post_id=post_id)
         if comment.author != request.user:
