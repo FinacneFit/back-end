@@ -42,7 +42,9 @@ class MyPostListView(APIView):
 class PostDetailView(APIView):
     def get_object(self, post_id):
         return get_object_or_404(
-            Post.objects.select_related('author').prefetch_related('likes_set', 'comments__author'),
+            Post.objects.select_related('author').prefetch_related(
+                'likes_set', 'comments__author', 'comments__replies__author'
+            ),
             pk=post_id,
         )
 
@@ -87,8 +89,48 @@ class CommentListCreateView(APIView):
         text = request.data.get('text', '').strip()
         if not text:
             return Response({'detail': '댓글 내용을 입력해주세요.'}, status=status.HTTP_400_BAD_REQUEST)
-        comment = Comment.objects.create(post=post, author=request.user, text=text)
+
+        parent = None
+        parent_id = request.data.get('parent_id')
+        if parent_id is not None:
+            parent = get_object_or_404(Comment, pk=parent_id, post=post)
+            if parent.parent_id is not None:
+                return Response(
+                    {'detail': '답글에는 다시 답글을 작성할 수 없습니다.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        comment = Comment.objects.create(
+            post=post,
+            author=request.user,
+            parent=parent,
+            text=text,
+        )
         return Response(CommentSerializer(comment).data, status=status.HTTP_201_CREATED)
+
+
+class CommentReplyCreateView(APIView):
+    def post(self, request, post_id, comment_id):
+        post = get_object_or_404(Post, pk=post_id)
+        parent = get_object_or_404(
+            Comment,
+            pk=comment_id,
+            post=post,
+            parent__isnull=True,
+        )
+        text = request.data.get('text', '').strip()
+        if not text:
+            return Response(
+                {'detail': '답글 내용을 입력해주세요.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        reply = Comment.objects.create(
+            post=post,
+            author=request.user,
+            parent=parent,
+            text=text,
+        )
+        return Response(CommentSerializer(reply).data, status=status.HTTP_201_CREATED)
 
 
 class CommentDetailView(APIView):

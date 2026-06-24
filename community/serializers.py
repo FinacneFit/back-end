@@ -71,10 +71,15 @@ def build_portfolio_snapshot(user, include_stocks=False, include_deposits=False)
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.CharField(source='author.nickname', read_only=True)
     author_id = serializers.IntegerField(source='author.id', read_only=True)
+    parent_id = serializers.IntegerField(read_only=True)
+    replies = serializers.SerializerMethodField()
 
     class Meta:
         model = Comment
-        fields = ('id', 'author', 'author_id', 'text', 'created_at')
+        fields = ('id', 'author', 'author_id', 'parent_id', 'text', 'created_at', 'replies')
+
+    def get_replies(self, obj):
+        return CommentSerializer(obj.replies.all(), many=True).data
 
 
 class PostListSerializer(serializers.ModelSerializer):
@@ -103,11 +108,15 @@ class PostListSerializer(serializers.ModelSerializer):
 
 
 class PostDetailSerializer(PostListSerializer):
-    comments = CommentSerializer(many=True, read_only=True)
+    comments = serializers.SerializerMethodField()
 
     class Meta(PostListSerializer.Meta):
         fields = ('id', 'title', 'content', 'author', 'author_id', 'risk_type',
                   'portfolio_snapshot', 'likes', 'liked', 'comments', 'created_at')
+
+    def get_comments(self, obj):
+        comments = obj.comments.filter(parent__isnull=True)
+        return CommentSerializer(comments, many=True).data
 
 
 class PostCreateSerializer(serializers.ModelSerializer):
