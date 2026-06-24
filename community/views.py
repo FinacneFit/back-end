@@ -22,9 +22,9 @@ class PostListCreateView(APIView):
         return Response(serializer.data)
 
     def post(self, request):
-        serializer = PostCreateSerializer(data=request.data)
+        serializer = PostCreateSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
-            post = serializer.save(author=request.user)
+            post = serializer.save()
             return Response(
                 PostDetailSerializer(post, context={'request': request}).data,
                 status=status.HTTP_201_CREATED,

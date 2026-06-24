@@ -7,6 +7,7 @@ class Post(models.Model):
     title = models.CharField(max_length=100)
     content = models.TextField()
     risk_type = models.CharField(max_length=20)
+    portfolio_snapshot = models.JSONField(default=dict, blank=True)
     created_at = models.DateField(auto_now_add=True)
 
     class Meta:
