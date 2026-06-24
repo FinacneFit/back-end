@@ -116,7 +116,10 @@ class CommentListCreateView(APIView):
             parent=parent,
             text=text,
         )
-        return Response(CommentSerializer(comment).data, status=status.HTTP_201_CREATED)
+        return Response(
+            CommentSerializer(comment, context={'request': request}).data,
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class CommentReplyCreateView(APIView):
@@ -140,7 +143,10 @@ class CommentReplyCreateView(APIView):
             parent=parent,
             text=text,
         )
-        return Response(CommentSerializer(reply).data, status=status.HTTP_201_CREATED)
+        return Response(
+            CommentSerializer(reply, context={'request': request}).data,
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class CommentDetailView(APIView):
@@ -153,7 +159,7 @@ class CommentDetailView(APIView):
             return Response({'detail': '댓글 내용을 입력해주세요.'}, status=status.HTTP_400_BAD_REQUEST)
         comment.text = text
         comment.save(update_fields=['text'])
-        return Response(CommentSerializer(comment).data)
+        return Response(CommentSerializer(comment, context={'request': request}).data)
 
     def delete(self, request, post_id, comment_id):
         comment = get_object_or_404(Comment, pk=comment_id, post_id=post_id)

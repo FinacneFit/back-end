@@ -79,27 +79,30 @@ def build_portfolio_snapshot(
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.CharField(source='author.nickname', read_only=True)
     author_id = serializers.IntegerField(source='author.id', read_only=True)
+    author_profile_image = serializers.ImageField(source='author.profile_image', read_only=True)
     parent_id = serializers.IntegerField(read_only=True)
     replies = serializers.SerializerMethodField()
 
     class Meta:
         model = Comment
-        fields = ('id', 'author', 'author_id', 'parent_id', 'text', 'created_at', 'replies')
+        fields = ('id', 'author', 'author_id', 'author_profile_image',
+                  'parent_id', 'text', 'created_at', 'replies')
 
     def get_replies(self, obj):
-        return CommentSerializer(obj.replies.all(), many=True).data
+        return CommentSerializer(obj.replies.all(), many=True, context=self.context).data
 
 
 class PostListSerializer(serializers.ModelSerializer):
     author = serializers.CharField(source='author.nickname', read_only=True)
     author_id = serializers.IntegerField(source='author.id', read_only=True)
+    author_profile_image = serializers.ImageField(source='author.profile_image', read_only=True)
     likes = serializers.SerializerMethodField()
     liked = serializers.SerializerMethodField()
     comment_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Post
-        fields = ('id', 'title', 'content', 'author', 'author_id', 'risk_type',
+        fields = ('id', 'title', 'content', 'author', 'author_id', 'author_profile_image', 'risk_type',
                   'portfolio_snapshot', 'likes', 'liked', 'comment_count', 'created_at')
 
     def get_likes(self, obj):
@@ -119,8 +122,8 @@ class PostDetailSerializer(PostListSerializer):
     comments = serializers.SerializerMethodField()
 
     class Meta(PostListSerializer.Meta):
-        fields = ('id', 'title', 'content', 'author', 'author_id', 'risk_type',
-                  'portfolio_snapshot', 'likes', 'liked', 'comments', 'created_at')
+        fields = ('id', 'title', 'content', 'author', 'author_id', 'author_profile_image', 'risk_type',
+                  'portfolio_snapshot', 'likes', 'liked', 'comment_count', 'comments', 'created_at')
 
     def get_comments(self, obj):
         comments = obj.comments.filter(parent__isnull=True)
