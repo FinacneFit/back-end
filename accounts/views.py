@@ -24,7 +24,7 @@ def signup(request):
         user = serializer.save()
         token, _ = Token.objects.get_or_create(user=user)
         return Response(
-            {'user': UserSerializer(user).data, 'token': token.key},
+            {'user': UserSerializer(user, context={'request': request}).data, 'token': token.key},
             status=status.HTTP_201_CREATED,
         )
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -50,7 +50,10 @@ def login_view(request):
         )
 
     token, _ = Token.objects.get_or_create(user=user)
-    return Response({'user': UserSerializer(user).data, 'token': token.key})
+    return Response({
+        'user': UserSerializer(user, context={'request': request}).data,
+        'token': token.key,
+    })
 
 
 @api_view(['POST'])
@@ -64,10 +67,15 @@ def logout_view(request):
 
 class MeView(APIView):
     def get(self, request):
-        return Response(UserSerializer(request.user).data)
+        return Response(UserSerializer(request.user, context={'request': request}).data)
 
     def patch(self, request):
-        serializer = UserSerializer(request.user, data=request.data, partial=True)
+        serializer = UserSerializer(
+            request.user,
+            data=request.data,
+            partial=True,
+            context={'request': request},
+        )
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
