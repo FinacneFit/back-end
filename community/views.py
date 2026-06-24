@@ -57,7 +57,12 @@ class PostDetailView(APIView):
         post = self.get_object(post_id)
         if post.author != request.user:
             return Response({'detail': '수정 권한이 없습니다.'}, status=status.HTTP_403_FORBIDDEN)
-        serializer = PostCreateSerializer(post, data=request.data, partial=True)
+        serializer = PostCreateSerializer(
+            post,
+            data=request.data,
+            partial=True,
+            context={'request': request},
+        )
         if serializer.is_valid():
             post = serializer.save()
             return Response(PostDetailSerializer(post, context={'request': request}).data)
