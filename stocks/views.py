@@ -1,4 +1,5 @@
 import re
+import random
 
 from django.db.models import Count
 from rest_framework.permissions import AllowAny
@@ -34,20 +35,29 @@ class StockStatsView(APIView):
 class RecommendedStocksView(APIView):
     def get(self, request):
         investment_type = request.user.investment_type
+        shuffle = request.query_params.get('shuffle', 'false') == 'true'
 
-        # financials JOIN — risk_score 있는 종목 우선, 없는 종목은 시가총액 순
         all_stocks = list(
             Stock.objects
             .select_related('financials')
+            .filter(financials__isnull=False)
             .order_by('financials__risk_score', '-market_cap')
         )
 
         if investment_type:
-            recommended = [s for s in all_stocks if investment_type in s.suitable_types]
+            pool = [s for s in all_stocks if investment_type in s.suitable_types]
         else:
-            recommended = all_stocks
+            pool = all_stocks
 
-        serializer = StockSerializer(recommended[:5], many=True)
+        if shuffle:
+            # 상위 100개 풀에서 랜덤 5개 선택 (시가총액 하위 제외)
+            candidates = pool[:100]
+            random.shuffle(candidates)
+            result = candidates[:5]
+        else:
+            result = pool[:5]
+
+        serializer = StockSerializer(result, many=True)
         return Response(serializer.data)
 
 

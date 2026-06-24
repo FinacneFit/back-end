@@ -1,3 +1,5 @@
+from django.utils import timezone
+
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -43,36 +45,62 @@ class SubmitView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        today = timezone.localdate()
+        if request.user.last_survey_date:
+            from datetime import timedelta
+            next_available = request.user.last_survey_date + timedelta(days=30)
+            if today < next_available:
+                return Response(
+                    {'detail': f'성향 검사는 30일에 한 번만 가능합니다. {next_available.strftime("%Y년 %m월 %d일")}부터 다시 시도해주세요.'},
+                    status=status.HTTP_429_TOO_MANY_REQUESTS,
+                )
+
         answers = request.data.get('answers', [])
 
-        if len(answers) != 15:
+        question_count = Question.objects.count()
+        if question_count == 0:
             return Response(
-                {'detail': '15개 문항 모두 응답해야 합니다.'},
+                {'detail': '설문 문항이 준비되지 않았습니다.'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        if len(answers) != question_count:
+            return Response(
+                {'detail': f'{question_count}개 문항 모두 응답해야 합니다.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         total_score = 0
+        answered_question_ids = set()
         for answer in answers:
+            question_id = answer.get('question_id')
             choice_id = answer.get('choice_id')
-            if not choice_id:
+            if not question_id or not choice_id:
                 return Response(
-                    {'detail': 'choice_id 값이 누락되었습니다.'},
+                    {'detail': 'question_id 또는 choice_id 값이 누락되었습니다.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if question_id in answered_question_ids:
+                return Response(
+                    {'detail': f'문항 ID {question_id}의 응답이 중복되었습니다.'},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             try:
-                choice = Choice.objects.get(pk=choice_id)
+                choice = Choice.objects.get(pk=choice_id, question_id=question_id)
                 total_score += choice.score
             except Choice.DoesNotExist:
                 return Response(
-                    {'detail': f'선택지 ID {choice_id}가 존재하지 않습니다.'},
+                    {'detail': f'문항 ID {question_id}에 선택지 ID {choice_id}가 존재하지 않습니다.'},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+            answered_question_ids.add(question_id)
 
         score_100 = normalize_score(total_score)
         result_type, description = get_result_type(score_100)
         request.user.risk_score = score_100
         request.user.investment_type = result_type
-        request.user.save(update_fields=['risk_score', 'investment_type'])
+        request.user.last_survey_date = today
+        request.user.save(update_fields=['risk_score', 'investment_type', 'last_survey_date'])
 
         return Response({
             'risk_score': score_100,

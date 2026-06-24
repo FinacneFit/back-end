@@ -7,6 +7,7 @@ class Post(models.Model):
     title = models.CharField(max_length=100)
     content = models.TextField()
     risk_type = models.CharField(max_length=20)
+    portfolio_snapshot = models.JSONField(default=dict, blank=True)
     created_at = models.DateField(auto_now_add=True)
 
     class Meta:
@@ -19,6 +20,13 @@ class Post(models.Model):
 class Comment(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    parent = models.ForeignKey(
+        'self',
+        on_delete=models.CASCADE,
+        related_name='replies',
+        null=True,
+        blank=True,
+    )
     text = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 

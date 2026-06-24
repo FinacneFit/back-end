@@ -11,7 +11,7 @@ class UserAdmin(BaseUserAdmin):
     ordering = ('email',)
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
-        ('프로필', {'fields': ('nickname', 'bio', 'investment_type', 'risk_score')}),
+        ('프로필', {'fields': ('nickname', 'bio', 'profile_image', 'investment_type', 'risk_score')}),
         ('권한', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
     )
     add_fieldsets = (
