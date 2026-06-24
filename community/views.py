@@ -57,6 +57,11 @@ class PostDetailView(APIView):
         post = self.get_object(post_id)
         if post.author != request.user:
             return Response({'detail': '수정 권한이 없습니다.'}, status=status.HTTP_403_FORBIDDEN)
+        if post.risk_type != request.user.investment_type:
+            return Response(
+                {'detail': '현재 투자 성향이 변경되어 이 게시글을 수정할 수 없습니다.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         serializer = PostCreateSerializer(post, data=request.data, partial=True)
         if serializer.is_valid():
             post = serializer.save()

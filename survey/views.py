@@ -1,3 +1,5 @@
+from django.utils import timezone
+
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -43,6 +45,16 @@ class SubmitView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        today = timezone.localdate()
+        if request.user.last_survey_date:
+            from datetime import timedelta
+            next_available = request.user.last_survey_date + timedelta(days=30)
+            if today < next_available:
+                return Response(
+                    {'detail': f'성향 검사는 30일에 한 번만 가능합니다. {next_available.strftime("%Y년 %m월 %d일")}부터 다시 시도해주세요.'},
+                    status=status.HTTP_429_TOO_MANY_REQUESTS,
+                )
+
         answers = request.data.get('answers', [])
 
         question_count = Question.objects.count()
@@ -87,7 +99,8 @@ class SubmitView(APIView):
         result_type, description = get_result_type(score_100)
         request.user.risk_score = score_100
         request.user.investment_type = result_type
-        request.user.save(update_fields=['risk_score', 'investment_type'])
+        request.user.last_survey_date = today
+        request.user.save(update_fields=['risk_score', 'investment_type', 'last_survey_date'])
 
         return Response({
             'risk_score': score_100,
