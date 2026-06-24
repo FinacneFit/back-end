@@ -45,28 +45,43 @@ class SubmitView(APIView):
     def post(self, request):
         answers = request.data.get('answers', [])
 
-        if len(answers) != 15:
+        question_count = Question.objects.count()
+        if question_count == 0:
             return Response(
-                {'detail': '15개 문항 모두 응답해야 합니다.'},
+                {'detail': '설문 문항이 준비되지 않았습니다.'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        if len(answers) != question_count:
+            return Response(
+                {'detail': f'{question_count}개 문항 모두 응답해야 합니다.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         total_score = 0
+        answered_question_ids = set()
         for answer in answers:
+            question_id = answer.get('question_id')
             choice_id = answer.get('choice_id')
-            if not choice_id:
+            if not question_id or not choice_id:
                 return Response(
-                    {'detail': 'choice_id 값이 누락되었습니다.'},
+                    {'detail': 'question_id 또는 choice_id 값이 누락되었습니다.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if question_id in answered_question_ids:
+                return Response(
+                    {'detail': f'문항 ID {question_id}의 응답이 중복되었습니다.'},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             try:
-                choice = Choice.objects.get(pk=choice_id)
+                choice = Choice.objects.get(pk=choice_id, question_id=question_id)
                 total_score += choice.score
             except Choice.DoesNotExist:
                 return Response(
-                    {'detail': f'선택지 ID {choice_id}가 존재하지 않습니다.'},
+                    {'detail': f'문항 ID {question_id}에 선택지 ID {choice_id}가 존재하지 않습니다.'},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+            answered_question_ids.add(question_id)
 
         score_100 = normalize_score(total_score)
         result_type, description = get_result_type(score_100)
