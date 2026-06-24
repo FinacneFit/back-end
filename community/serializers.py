@@ -1,10 +1,17 @@
+from copy import deepcopy
+
 from rest_framework import serializers
 from deposits.models import SavedDeposit
 from portfolio.models import PortfolioHolding
 from .models import Comment, Post
 
 
-def build_portfolio_snapshot(user, include_stocks=False, include_deposits=False):
+def build_portfolio_snapshot(
+    user,
+    include_stocks=False,
+    include_deposits=False,
+    show_returns=True,
+):
     snapshot = {}
 
     if include_stocks:
@@ -29,6 +36,7 @@ def build_portfolio_snapshot(user, include_stocks=False, include_deposits=False)
         if items:
             snapshot['stocks'] = {
                 'items': items,
+                'show_returns': show_returns,
                 'total_invested': total_invested,
                 'total_value': total_value,
                 'return_rate': round(
@@ -122,11 +130,13 @@ class PostDetailSerializer(PostListSerializer):
 class PostCreateSerializer(serializers.ModelSerializer):
     attach_stock_portfolio = serializers.BooleanField(write_only=True, required=False, default=False)
     attach_deposit_portfolio = serializers.BooleanField(write_only=True, required=False, default=False)
+    show_portfolio_returns = serializers.BooleanField(write_only=True, required=False, default=True)
 
     class Meta:
         model = Post
         fields = ('title', 'content', 'risk_type',
-                  'attach_stock_portfolio', 'attach_deposit_portfolio')
+                  'attach_stock_portfolio', 'attach_deposit_portfolio',
+                  'show_portfolio_returns')
 
     def validate_title(self, value):
         if not value.strip():
@@ -141,10 +151,61 @@ class PostCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         include_stocks = validated_data.pop('attach_stock_portfolio', False)
         include_deposits = validated_data.pop('attach_deposit_portfolio', False)
+        show_returns = validated_data.pop('show_portfolio_returns', True)
         user = self.context['request'].user
         validated_data['portfolio_snapshot'] = build_portfolio_snapshot(
             user,
             include_stocks=include_stocks,
             include_deposits=include_deposits,
+            show_returns=show_returns,
         )
         return Post.objects.create(author=user, **validated_data)
+
+    def update(self, instance, validated_data):
+        attachment_fields = {
+            'attach_stock_portfolio',
+            'attach_deposit_portfolio',
+            'show_portfolio_returns',
+        }
+        should_update_snapshot = any(field in validated_data for field in attachment_fields)
+        include_stocks = validated_data.pop('attach_stock_portfolio', False)
+        include_deposits = validated_data.pop('attach_deposit_portfolio', False)
+        show_returns = validated_data.pop('show_portfolio_returns', True)
+
+        if should_update_snapshot:
+            # 기존에 첨부된 자산은 작성 당시 스냅샷을 보존한다.
+            snapshot = deepcopy(instance.portfolio_snapshot or {})
+            if include_stocks:
+                if 'stocks' not in snapshot:
+                    stocks = build_portfolio_snapshot(
+                        self.context['request'].user,
+                        include_stocks=True,
+                        show_returns=show_returns,
+                    ).get('stocks')
+                    if stocks:
+                        snapshot['stocks'] = stocks
+                else:
+                    snapshot['stocks']['show_returns'] = show_returns
+            else:
+                snapshot.pop('stocks', None)
+
+            if include_deposits:
+                if 'deposits' not in snapshot:
+                    deposits = build_portfolio_snapshot(
+                        self.context['request'].user,
+                        include_deposits=True,
+                    ).get('deposits')
+                    if deposits:
+                        snapshot['deposits'] = deposits
+            else:
+                snapshot.pop('deposits', None)
+
+            instance.portfolio_snapshot = snapshot
+
+        for field, value in validated_data.items():
+            setattr(instance, field, value)
+        update_fields = list(validated_data.keys())
+        if should_update_snapshot:
+            update_fields.append('portfolio_snapshot')
+        instance.save(update_fields=update_fields)
+        return instance

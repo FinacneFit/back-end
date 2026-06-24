@@ -62,7 +62,12 @@ class PostDetailView(APIView):
                 {'detail': '현재 투자 성향이 변경되어 이 게시글을 수정할 수 없습니다.'},
                 status=status.HTTP_403_FORBIDDEN,
             )
-        serializer = PostCreateSerializer(post, data=request.data, partial=True)
+        serializer = PostCreateSerializer(
+            post,
+            data=request.data,
+            partial=True,
+            context={'request': request},
+        )
         if serializer.is_valid():
             post = serializer.save()
             return Response(PostDetailSerializer(post, context={'request': request}).data)
