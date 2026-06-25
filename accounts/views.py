@@ -1,11 +1,11 @@
 from django.contrib.auth import authenticate
 from django.shortcuts import get_object_or_404
 from rest_framework import status
-from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import Follow, User
 from .serializers import (
@@ -22,9 +22,13 @@ def signup(request):
     serializer = SignupSerializer(data=request.data)
     if serializer.is_valid():
         user = serializer.save()
-        token, _ = Token.objects.get_or_create(user=user)
+        refresh = RefreshToken.for_user(user)
         return Response(
-            {'user': UserSerializer(user, context={'request': request}).data, 'token': token.key},
+            {
+                'user': UserSerializer(user, context={'request': request}).data,
+                'access': str(refresh.access_token),
+                'refresh': str(refresh),
+            },
             status=status.HTTP_201_CREATED,
         )
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -49,19 +53,16 @@ def login_view(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    token, _ = Token.objects.get_or_create(user=user)
+    refresh = RefreshToken.for_user(user)
     return Response({
         'user': UserSerializer(user, context={'request': request}).data,
-        'token': token.key,
+        'access': str(refresh.access_token),
+        'refresh': str(refresh),
     })
 
 
 @api_view(['POST'])
 def logout_view(request):
-    try:
-        request.user.auth_token.delete()
-    except Exception:
-        pass
     return Response({'detail': '로그아웃 되었습니다.'})
 
 
